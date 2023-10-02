@@ -1,7 +1,7 @@
 package nx.pingwheel.client.helper;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import lombok.var;
+//import lombok.var;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.OverlayTexture;

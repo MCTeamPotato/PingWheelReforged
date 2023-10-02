@@ -1,7 +1,7 @@
 package nx.pingwheel.client.helper;
 
 import net.minecraft.entity.Entity;
-import lombok.var;
+//import lombok.var;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;

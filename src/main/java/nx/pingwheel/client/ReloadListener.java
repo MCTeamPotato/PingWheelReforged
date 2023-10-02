@@ -1,6 +1,6 @@
 package nx.pingwheel.client;
 
-import lombok.var;
+//import lombok.var;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.resource.ResourceManager;

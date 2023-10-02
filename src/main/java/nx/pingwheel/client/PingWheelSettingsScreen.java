@@ -1,6 +1,6 @@
 package nx.pingwheel.client;
 
-import lombok.var;
+//import lombok.var;
 import com.mojang.serialization.Codec;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonListWidget;

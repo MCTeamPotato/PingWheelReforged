@@ -1,6 +1,6 @@
 package nx.pingwheel.shared.network;
 
-import lombok.var;
+//import lombok.var;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;

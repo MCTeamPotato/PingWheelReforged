@@ -3,7 +3,7 @@ package nx.pingwheel.client.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.Getter;
-import lombok.var;
+//import lombok.var;
 import net.minecraftforge.fml.loading.FMLLoader;
 import nx.pingwheel.shared.network.UpdateChannelPacketC2S;
 
