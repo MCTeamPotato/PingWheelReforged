@@ -1,15 +1,14 @@
 package nx.pingwheel.client.helper;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-//import lombok.var;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformation;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
+import net.minecraft.screen.PlayerScreenHandler;
 
 import static nx.pingwheel.client.PingWheelClient.Game;
 
@@ -21,10 +20,10 @@ public class Draw {
 										  BakedModel model,
 										  float scale) {
 		Game.getTextureManager()
-			.getTexture(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE)
+			.getTexture(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
 			.setFilter(false, false);
 
-		RenderSystem.setShaderTexture(0, SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE);
+		RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
 		RenderSystem.enableBlend();
 		RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA);
 		RenderSystem.setShaderColor(1.f, 1.f, 1.f, 1.f);
