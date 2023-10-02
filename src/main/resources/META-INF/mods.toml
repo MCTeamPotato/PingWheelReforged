@@ -1,0 +1,14 @@
+modLoader = "javafml"
+loaderVersion = "[36,)"
+license = "MIT"
+
+[[mods]]
+modId = "pingwheel"
+version = "${version}"
+logoFile="assets/pingwheel/icon.png"
+displayName = "PingWheel"
+credits="RXJpaw, Luken (original author)"
+authors="TeamPotato"
+description = '''
+
+'''

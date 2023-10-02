@@ -1,0 +1,19 @@
+{
+	"pingwheel.key.mark-location": "Mark Location",
+	"pingwheel.key.open-settings": "Open Settings",
+	"pingwheel.subtitles.ping": "Location Ping Alert",
+
+	"pingwheel.settings.pingVolume": "Ping Volume: %s",
+	"pingwheel.settings.pingDuration": "Ping Duration: %s",
+	"pingwheel.settings.pingDistance": "Ping Distance: %s",
+	"pingwheel.settings.pingDistance.hidden": "Hidden",
+	"pingwheel.settings.pingDistance.unlimited": "Unlimited",
+	"pingwheel.settings.correctionPeriod": "Correction Period: %s",
+	"pingwheel.settings.itemIconVisible": "Item Icons",
+	"pingwheel.settings.pingSize": "Ping Size: %s",
+	"pingwheel.settings.channel": "Ping Channel",
+	"pingwheel.settings.channel.tooltip": "You only send and receive Pings to and from players on the same channel",
+
+	"pingwheel.settings.title": "Ping Wheel Settings",
+	"pingwheel.name": "Ping Wheel"
+}
