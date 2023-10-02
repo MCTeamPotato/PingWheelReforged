@@ -72,7 +72,7 @@ public class Raycast {
 				.expand(0.25);
 			var hitPos = targetBoundingBox.raycast(min, max);
 
-			if (hitPos.isEmpty()) {
+			if (!hitPos.isPresent()) {
 				continue;
 			}
 
