@@ -1,9 +1,7 @@
 package nx.pingwheel.client;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-//import lombok.var;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -14,7 +12,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec2f;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -25,9 +22,9 @@ import nx.pingwheel.client.helper.PingData;
 import nx.pingwheel.client.helper.Raycast;
 import nx.pingwheel.shared.network.PingLocationPacketC2S;
 import nx.pingwheel.shared.network.PingLocationPacketS2C;
-import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import static nx.pingwheel.client.PingWheelClient.*;
@@ -38,7 +35,7 @@ public class ClientCore {
 	private static final int TPS = 20;
 
 	private static final Config Config = ConfigHandler.getConfig();
-	private static final List<PingData> pingRepo = new ObjectArrayList<>();
+	private static final ArrayList<PingData> pingRepo = new ArrayList<>();
 	private static boolean queuePing = false;
 	private static ClientWorld lastWorld = null;
 	private static int lastPing = 0;
@@ -51,7 +48,7 @@ public class ClientCore {
 	public static void onPingLocation(PacketByteBuf packet) {
 		var pingLocationPacket = PingLocationPacketS2C.parse(packet);
 
-		if (!pingLocationPacket.isPresent() || Game.player == null || Game.world == null) {
+		if (pingLocationPacket.isEmpty() || Game.player == null || Game.world == null) {
 			return;
 		}
 
@@ -80,7 +77,7 @@ public class ClientCore {
 
 			Game.getSoundManager().play(
 				new DirectionalSoundInstance(
-					PING_SOUND.get(),
+					PING_SOUND_EVENT,
 					SoundCategory.MASTER,
 					Config.getPingVolume() / 100f,
 					1f,
@@ -117,10 +114,12 @@ public class ClientCore {
 		processPings(matrixStack, projectionMatrix, tickDelta, time);
 	}
 
-	public static void onRenderGUI(MatrixStack m, float tickDelta) {
+	public static void onRenderGUI(DrawContext ctx, float tickDelta) {
 		if (Game.player == null) {
 			return;
 		}
+
+		var m = ctx.getMatrices();
 
 		for (var ping : pingRepo) {
 			var uiScale = (float)Game.getWindow().getScaleFactor();
@@ -140,7 +139,7 @@ public class ClientCore {
 			var shadowBlack = ColorHelper.Argb.getArgb(64, 0, 0, 0);
 
 			m.push();
-			m.translate((pos.getX() / uiScale), (pos.getY() / uiScale), 0);
+			m.translate((pos.x / uiScale), (pos.y / uiScale), 0);
 			m.scale(pingScale, pingScale, 1f);
 
 			var text = String.format("%.1fm", distanceToPing);
@@ -152,8 +151,8 @@ public class ClientCore {
 
 			m.push();
 			m.translate(textOffset.x, textOffset.y, 0);
-			DrawableHelper.fill(m, -2, -2, (int)textMetrics.x + 1, (int)textMetrics.y, shadowBlack);
-			Game.textRenderer.draw(m, text, 0f, 0f, white);
+			ctx.fill(-2, -2, (int)textMetrics.x + 1, (int)textMetrics.y, shadowBlack);
+			ctx.drawText(Game.textRenderer, text, 0, 0, white, false);
 			m.pop();
 
 			if (ping.itemStack != null && Config.isItemIconVisible()) {
@@ -161,8 +160,8 @@ public class ClientCore {
 
 				Draw.renderGuiItemModel(
 					ping.itemStack,
-					(pos.getX() / uiScale),
-					(pos.getY() / uiScale),
+					(pos.x / uiScale),
+					(pos.y / uiScale),
 					model,
 					pingScale * 2 / 3
 				);
@@ -170,10 +169,9 @@ public class ClientCore {
 				final var size = 12;
 				final var offset = size / -2;
 
-				RenderSystem.setShaderTexture(0, PING_TEXTURE_ID);
 				RenderSystem.enableBlend();
-				DrawableHelper.drawTexture(
-					m,
+				ctx.drawTexture(
+					PING_TEXTURE_ID,
 					offset,
 					offset,
 					0,
@@ -188,14 +186,14 @@ public class ClientCore {
 			} else {
 				MathUtils.rotateZ(m, (float)(Math.PI / 4f));
 				m.translate(-2.5, -2.5, 0);
-				DrawableHelper.fill(m, 0, 0, 5, 5, white);
+				ctx.fill(0, 0, 5, 5, white);
 			}
 
 			m.pop();
 		}
 	}
 
-	private static void processPings(@NotNull MatrixStack matrixStack, Matrix4f projectionMatrix, float tickDelta, int time) {
+	private static void processPings(MatrixStack matrixStack, Matrix4f projectionMatrix, float tickDelta, int time) {
 		var modelViewMatrix = matrixStack.peek().getPositionMatrix();
 
 		pingRepo.removeIf(p -> p.aliveTime > Config.getPingDuration() * TPS);

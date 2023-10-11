@@ -1,21 +1,15 @@
 package nx.pingwheel.client;
 
-//import lombok.var;
 import com.mojang.serialization.Codec;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonListWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.OptionListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.SimpleOption;
-import net.minecraft.client.util.OrderableTooltip;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.screen.ScreenTexts;
-import net.minecraft.text.OrderedText;
 import net.minecraft.text.Text;
 import nx.pingwheel.client.config.Config;
-
-import java.util.Collections;
-import java.util.List;
 
 import static nx.pingwheel.client.PingWheelClient.ConfigHandler;
 
@@ -24,7 +18,7 @@ public class PingWheelSettingsScreen extends Screen {
 	private final Config config;
 
 	private Screen parent;
-	private ButtonListWidget list;
+	private OptionListWidget list;
 	private TextFieldWidget channelTextField;
 
 	public PingWheelSettingsScreen() {
@@ -40,11 +34,15 @@ public class PingWheelSettingsScreen extends Screen {
 	@Override
 	public void tick() {
 		this.channelTextField.tick();
+
+		if (this.channelTextField.isFocused() && this.getFocused() != this.channelTextField) {
+			this.setFocused(this.channelTextField);
+		}
 	}
 
 	@Override
 	protected void init() {
-		this.list = new ButtonListWidget(this.client, this.width, this.height, 32, this.height - 32, 25);
+		this.list = new OptionListWidget(this.client, this.width, this.height, 32, this.height - 32, 25);
 
 		final var pingVolumeOption = getPingVolumeOption();
 		final var pingDurationOption = getPingDurationOption();
@@ -66,7 +64,10 @@ public class PingWheelSettingsScreen extends Screen {
 
 		this.addSelectableChild(this.list);
 
-		this.addDrawableChild(new ButtonWidget(this.width / 2 - 100, this.height - 27, 200, 20, ScreenTexts.DONE, (button) -> close()));
+		this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, (button) -> close())
+			.position(this.width / 2 - 100, this.height - 27)
+			.size(200, 20)
+			.build());
 	}
 
 	@Override
@@ -81,33 +82,19 @@ public class PingWheelSettingsScreen extends Screen {
 	}
 
 	@Override
-	public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-		this.renderBackground(matrices);
-		this.list.render(matrices, mouseX, mouseY, delta);
-		drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 20, 16777215);
+	public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+		this.renderBackground(ctx);
+		this.list.render(ctx, mouseX, mouseY, delta);
+		ctx.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 16777215);
 
-		drawTextWithShadow(matrices, this.textRenderer, Text.translatable("pingwheel.settings.channel"), this.width / 2 - 100, 128, 10526880);
-		this.channelTextField.render(matrices, mouseX, mouseY, delta);
+		ctx.drawTextWithShadow(this.textRenderer, Text.translatable("pingwheel.settings.channel"), this.width / 2 - 100, 128, 10526880);
+		this.channelTextField.render(ctx, mouseX, mouseY, delta);
 
-		super.render(matrices, mouseX, mouseY, delta);
+		super.render(ctx, mouseX, mouseY, delta);
 
-		var tooltipLines = getHoveredButtonTooltip(this.list, mouseX, mouseY);
-
-		if (tooltipLines.isEmpty() && (this.channelTextField.isHovered() && !this.channelTextField.isFocused())) {
-			tooltipLines = this.textRenderer.wrapLines(Text.translatable("pingwheel.settings.channel.tooltip"), 140);
+		if (this.channelTextField.isHovered() && !this.channelTextField.isFocused()) {
+			ctx.drawOrderedTooltip(this.textRenderer, this.textRenderer.wrapLines(Text.translatable("pingwheel.settings.channel.tooltip"), 140), mouseX, mouseY);
 		}
-
-		this.renderOrderedTooltip(matrices, tooltipLines, mouseX, mouseY);
-	}
-
-	private static List<OrderedText> getHoveredButtonTooltip(ButtonListWidget buttonList, int mouseX, int mouseY) {
-		final var orderableTooltip = (OrderableTooltip)buttonList.getHoveredButton(mouseX, mouseY).orElse(null);
-
-		if (orderableTooltip != null) {
-			return orderableTooltip.getOrderedTooltip();
-		}
-
-		return Collections.emptyList();
 	}
 
 	private SimpleOption<Integer> getPingVolumeOption() {

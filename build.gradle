@@ -15,13 +15,15 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     forge "net.minecraftforge:forge:${project.forge_version}"
-    modImplementation "curse.maven:papi-project-890701:4778537"
+    modImplementation(files("deps/fabric_networking_api_reforged-1.20.1-0.0.1.jar"))
+    include(files("deps/fabric_networking_api_reforged-1.20.1-0.0.1.jar"))
     implementation "org.projectlombok:lombok:1.18.28"
     annotationProcessor "org.projectlombok:lombok:1.18.28"
 }

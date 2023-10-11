@@ -1,9 +1,10 @@
 package nx.pingwheel.shared;
 
 //import lombok.var;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.fabricmc.networking.api.networking.v1.PacketByteBufs;
+import net.fabricmc.networking.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -12,7 +13,7 @@ import nx.pingwheel.shared.network.PingLocationPacketS2C;
 import nx.pingwheel.shared.network.UpdateChannelPacketC2S;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static nx.pingwheel.shared.PingWheel.LOGGER;
@@ -20,7 +21,7 @@ import static nx.pingwheel.shared.PingWheel.MOD_VERSION;
 
 public class ServerCore {
 
-	private static final HashMap<UUID, String> playerChannels = new HashMap<>();
+	private static final Map<UUID, String> playerChannels = new Object2ObjectOpenHashMap<>();
 
 	public static void onPlayerDisconnect(@NotNull ServerPlayerEntity player) {
 		playerChannels.remove(player.getUuid());
@@ -31,7 +32,7 @@ public class ServerCore {
 
 		if (!channelUpdatePacket.isPresent()) {
 			LOGGER.warn("invalid channel update from " + String.format("%s (%s)", player.getGameProfile().getName(), player.getUuid()));
-			player.sendMessage(Text.of("§c[Ping-Wheel] Channel couldn't be updated. Make sure your version matches the server's version: " + MOD_VERSION), false);
+			player.sendMessage(Text.of("§c[pingwheel] Channel couldn't be updated. Make sure your version matches the server's version: " + MOD_VERSION), false);
 			return;
 		}
 
@@ -44,7 +45,7 @@ public class ServerCore {
 
 		if (!pingLocationPacket.isPresent()) {
 			LOGGER.warn("invalid ping location from " + String.format("%s (%s)", player.getGameProfile().getName(), player.getUuid()));
-			player.sendMessage(Text.of("§c[Ping-Wheel] Ping couldn't be sent. Make sure your version matches the server's version: " + MOD_VERSION), false);
+			player.sendMessage(Text.of("§c[pingwheel] Ping couldn't be sent. Make sure your version matches the server's version: " + MOD_VERSION), false);
 			return;
 		}
 
@@ -56,7 +57,7 @@ public class ServerCore {
 
 		packetCopy.writeUuid(player.getUuid());
 
-		for (ServerPlayerEntity p : PlayerLookup.world(player.getWorld())) {
+		for (ServerPlayerEntity p : player.getServerWorld().getPlayers()) {
 			if (!channel.equals(playerChannels.getOrDefault(p.getUuid(), ""))) {
 				continue;
 			}

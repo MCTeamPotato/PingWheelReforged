@@ -5,7 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.model.BakedModel;
-import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -20,8 +20,8 @@ public class Draw {
 										  BakedModel model,
 										  float scale) {
 		Game.getTextureManager()
-			.getTexture(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
-			.setFilter(false, false);
+				.getTexture(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE)
+				.setFilter(false, false);
 
 		RenderSystem.setShaderTexture(0, PlayerScreenHandler.BLOCK_ATLAS_TEXTURE);
 		RenderSystem.enableBlend();
@@ -30,7 +30,7 @@ public class Draw {
 
 		var matrixStack = RenderSystem.getModelViewStack();
 		matrixStack.push();
-		matrixStack.translate(x, y, (100.f + Game.getItemRenderer().zOffset));
+		matrixStack.translate(x, y, 100);
 		matrixStack.scale(scale, scale, scale);
 		matrixStack.scale(1.f, -1.f, 1.f);
 		matrixStack.scale(16.f, 16.f, 16.f);
@@ -43,14 +43,14 @@ public class Draw {
 			DiffuseLighting.disableGuiDepthLighting();
 		}
 		Game.getItemRenderer().renderItem(
-			itemStack,
-			ModelTransformation.Mode.GUI,
-			false,
-			matrixStackDummy,
-			immediate,
-			15728880,
-			OverlayTexture.DEFAULT_UV,
-			model
+				itemStack,
+				ModelTransformationMode.GUI,
+				false,
+				matrixStackDummy,
+				immediate,
+				15728880,
+				OverlayTexture.DEFAULT_UV,
+				model
 		);
 		immediate.draw();
 		RenderSystem.enableDepthTest();

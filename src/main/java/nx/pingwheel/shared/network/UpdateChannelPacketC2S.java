@@ -1,10 +1,11 @@
 package nx.pingwheel.shared.network;
 
 //import lombok.var;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.networking.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.networking.api.networking.v1.PacketByteBufs;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.util.Identifier;
 import nx.pingwheel.shared.PingWheel;

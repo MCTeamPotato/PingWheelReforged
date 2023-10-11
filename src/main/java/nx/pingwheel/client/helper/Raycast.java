@@ -1,7 +1,6 @@
 package nx.pingwheel.client.helper;
 
 import net.minecraft.entity.Entity;
-//import lombok.var;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -20,7 +19,7 @@ public class Raycast {
 											 boolean hitFluids) {
 		var cameraEntity = Game.cameraEntity;
 
-		if (cameraEntity == null || cameraEntity.world == null) {
+		if (cameraEntity == null || cameraEntity.getWorld() == null) {
 			return null;
 		}
 
@@ -31,7 +30,7 @@ public class Raycast {
 			.stretch(cameraEntity.getRotationVec(1.f).multiply(maxDistance))
 			.expand(1.0, 1.0, 1.0);
 
-		var blockHitResult = cameraEntity.world.raycast(
+		var blockHitResult = cameraEntity.getWorld().raycast(
 			new RaycastContext(
 				rayStartVec,
 				rayEndVec,
@@ -66,13 +65,13 @@ public class Raycast {
 		var minDist = min.squaredDistanceTo(max);
 		EntityHitResult minHitResult = null;
 
-		for (var ent : entity.world.getOtherEntities(entity, box, predicate)) {
+		for (var ent : entity.getWorld().getOtherEntities(entity, box, predicate)) {
 			var targetBoundingBox = ent.getBoundingBox()
 				.expand(ent.getTargetingMargin())
 				.expand(0.25);
 			var hitPos = targetBoundingBox.raycast(min, max);
 
-			if (!hitPos.isPresent()) {
+			if (hitPos.isEmpty()) {
 				continue;
 			}
 
