@@ -17,11 +17,10 @@ public class PingWheel {
 
 	public static final String MOD_ID = "pingwheel";
 	public static final String MOD_VERSION = FMLLoader.getLoadingModList().getModFileById(MOD_ID).versionString();
-	public static final Logger LOGGER = LogManager.getLogger(MOD_ID,
-		new FormattedMessageFactory() {
+	public static final Logger LOGGER = LogManager.getLogger(MOD_ID, new FormattedMessageFactory() {
 			@Override
 			public Message newMessage(String message) {
-				return super.newMessage("[pingwheel] " + message);
+				return super.newMessage("[PingWheel] " + message);
 			}
 		});
 

@@ -67,7 +67,7 @@ public class PingWheelClient {
 
 	@SubscribeEvent
 	public void onRenderLevel(RenderLevelStageEvent event) {
-		if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_LEVEL)) {
+		if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_WEATHER)) {
 			ClientCore.onRenderWorld(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick());
 		}
 	}
