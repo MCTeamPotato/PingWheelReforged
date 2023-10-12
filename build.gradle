@@ -1,5 +1,5 @@
 plugins {
-    id "dev.architectury.loom" version "1.1-SNAPSHOT"
+    id "dev.architectury.loom" version "1.3-SNAPSHOT"
 }
 
 sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
@@ -15,13 +15,15 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    maven { url 'https://jitpack.io' }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     forge "net.minecraftforge:forge:${project.forge_version}"
-    modImplementation "curse.maven:papi-project-890701:4778537"
+    modImplementation 'com.github.MCTeamPotato:FabricNetworkingAPIReforged:1192-0.0.1'
+    include 'com.github.MCTeamPotato:FabricNetworkingAPIReforged:1192-0.0.1'
     implementation "org.projectlombok:lombok:1.18.28"
     annotationProcessor "org.projectlombok:lombok:1.18.28"
 }

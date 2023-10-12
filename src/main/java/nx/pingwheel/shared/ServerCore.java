@@ -1,9 +1,11 @@
 package nx.pingwheel.shared;
 
 //import lombok.var;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.fabricmc.networking.api.networking.v1.PacketByteBufs;
+import net.fabricmc.networking.api.networking.v1.PlayerLookup;
+import net.fabricmc.networking.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -12,7 +14,7 @@ import nx.pingwheel.shared.network.PingLocationPacketS2C;
 import nx.pingwheel.shared.network.UpdateChannelPacketC2S;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static nx.pingwheel.shared.PingWheel.LOGGER;
@@ -20,7 +22,7 @@ import static nx.pingwheel.shared.PingWheel.MOD_VERSION;
 
 public class ServerCore {
 
-	private static final HashMap<UUID, String> playerChannels = new HashMap<>();
+	private static final Map<UUID, String> playerChannels = new Object2ObjectOpenHashMap<>();
 
 	public static void onPlayerDisconnect(@NotNull ServerPlayerEntity player) {
 		playerChannels.remove(player.getUuid());

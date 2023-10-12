@@ -1,24 +1,24 @@
 package nx.pingwheel.client;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
-//import lombok.var;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import net.fabricmc.networking.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.networking.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.resource.ResourceType;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraftforge.client.event.*;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -26,12 +26,12 @@ import net.minecraftforge.registries.RegistryObject;
 import nx.pingwheel.client.config.ConfigHandler;
 import nx.pingwheel.shared.network.PingLocationPacketS2C;
 import nx.pingwheel.shared.network.UpdateChannelPacketC2S;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.UnaryOperator;
 
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
-import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static nx.pingwheel.shared.PingWheel.MOD_ID;
 
 public class PingWheelClient {
@@ -48,28 +48,39 @@ public class PingWheelClient {
 		PING_SOUND = SOUND_EVENT_DEFERRED_REGISTER.register("ping", () -> new SoundEvent(new Identifier(MOD_ID, "ping")));
 	}
 
-	public static void clientInit() {
+	public PingWheelClient() {
 		ConfigHandler.load();
+		IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+		bus.addListener((RegisterKeyMappingsEvent event) -> {
+			event.register(kbPing);
+			event.register(kbSettings);
+		});
 
-		setupKeyBindings();
-		setupClientCommands();
+		SOUND_EVENT_DEFERRED_REGISTER.register(bus);
 
-		SOUND_EVENT_DEFERRED_REGISTER.register(FMLJavaModLoadingContext.get().getModEventBus());
-
-		HudRenderCallback.EVENT.register(ClientCore::onRenderGUI);
-		WorldRenderEvents.END.register(ctx -> ClientCore.onRenderWorld(ctx.matrixStack(), ctx.projectionMatrix(), ctx.tickDelta()));
+		MinecraftForge.EVENT_BUS.register(this);
 
 		ClientPlayNetworking.registerGlobalReceiver(PingLocationPacketS2C.ID, (a, b, packet, c) -> ClientCore.onPingLocation(packet));
 		ClientPlayConnectionEvents.JOIN.register((a, b, c) -> new UpdateChannelPacketC2S(ConfigHandler.getConfig().getChannel()).send());
 
-		ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new ReloadListener());
+		bus.addListener((RegisterClientReloadListenersEvent event) -> event.registerReloadListener(new ReloadListener()));
 	}
 
-	private static void setupKeyBindings() {
-		var kbPing = KeyBindingHelper.registerKeyBinding(new KeyBinding("pingwheel.key.mark-location", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_5, "pingwheel.name"));
-		var kbSettings = KeyBindingHelper.registerKeyBinding(new KeyBinding("pingwheel.key.open-settings", InputUtil.Type.KEYSYM, -1, "pingwheel.name"));
+	@SubscribeEvent
+	public void onRenderLevel(RenderLevelStageEvent event) {
+		if (event.getStage().equals(RenderLevelStageEvent.Stage.AFTER_WEATHER)) {
+			ClientCore.onRenderWorld(event.getPoseStack(), event.getProjectionMatrix(), event.getPartialTick());
+		}
+	}
 
-		ClientTickEvents.END_CLIENT_TICK.register(client -> {
+	@SubscribeEvent
+	public void onPostGuiRender(RenderGuiEvent.@NotNull Post event) {
+		ClientCore.onRenderGUI(event.getPoseStack(), event.getPartialTick());
+	}
+
+	@SubscribeEvent
+	public void onClientTick(TickEvent.ClientTickEvent event) {
+		if (event.phase.equals(TickEvent.Phase.END)) {
 			if (kbPing.wasPressed()) {
 				ClientCore.markLocation();
 			}
@@ -77,60 +88,74 @@ public class PingWheelClient {
 			if (kbSettings.wasPressed()) {
 				Game.setScreen(new PingWheelSettingsScreen());
 			}
-		});
+		}
 	}
 
-	private static void setupClientCommands() {
+	KeyBinding kbPing = new KeyBinding("pingwheel.key.mark-location", InputUtil.Type.MOUSE, GLFW.GLFW_MOUSE_BUTTON_5, "pingwheel.name");
+	KeyBinding kbSettings = new KeyBinding("pingwheel.key.open-settings", InputUtil.Type.KEYSYM, -1, "pingwheel.name");
+
+
+	@SubscribeEvent
+	public void onCommandRegister(RegisterClientCommandsEvent event) {
 		UnaryOperator<String> formatChannel = (channel) -> "".equals(channel) ? "§eGlobal §7(default)" : String.format("\"§6%s§r\"", channel);
 
-		var cmdChannel = literal("channel")
-				.executes((context) -> {
-					var currentChannel = ConfigHandler.getConfig().getChannel();
-					context.getSource().sendFeedback(Text.of(String.format("Current Ping-Wheel channel: %s", formatChannel.apply(currentChannel))));
+		Command<ServerCommandSource> helpCallback = (context) -> {
+			var output = """
+				§f/pingwheel config
+				§7(manage pingwheel configuration)
+				§f/pingwheel channel
+				§7(get your current channel)
+				§f/pingwheel channel <channel_name>
+				§7(set your current channel, use "" for global channel)""";
 
-					return 1;
-				})
-				.then(argument("channel_name", StringArgumentType.string()).executes((context) -> {
-					var newChannel = context.getArgument("channel_name", String.class);
-
-					ConfigHandler.getConfig().setChannel(newChannel);
-					ConfigHandler.save();
-
-					context.getSource().sendFeedback(Text.of(String.format("Set Ping-Wheel channel to: %s", formatChannel.apply(newChannel))));
-
-					return 1;
-				}));
-
-		var cmdConfig = literal("config")
-				.executes((context) -> {
-					var client = context.getSource().getClient();
-					client.send(() -> client.setScreen(new PingWheelSettingsScreen()));
-
-					return 1;
-				});
-
-		Command<FabricClientCommandSource> helpCallback = (context) -> {
-			var output = "/pingwheel config\n" +
-					"§7(manage pingwheel configuration)\n" +
-					"/pingwheel channel\n" +
-					"§7(get your current channel)\n" +
-					"/pingwheel channel <channel_name>\n" +
-					"§7(set your current channel, use \"\" for global channel)";
-
-			context.getSource().sendFeedback(Text.of(output));
+			var message = Text.of(output);
+			MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(message);
+			MinecraftClient.getInstance().getNarratorManager().narrate(message);
 
 			return 1;
 		};
 
-		var cmdHelp = literal("help")
-				.executes(helpCallback);
-
 		var cmdBase = literal("pingwheel")
 				.executes(helpCallback)
-				.then(cmdHelp)
-				.then(cmdConfig)
-				.then(cmdChannel);
+				.then(literal("help").executes(helpCallback))
+				.then(literal("config")
+						.executes((context) -> {
+							var client = MinecraftClient.getInstance();
+							client.send(() -> client.setScreen(new PingWheelSettingsScreen()));
 
-		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(cmdBase));
+							return 1;
+						}))
+				.then(literal("channel")
+						.executes((context) -> {
+							var currentChannel = ConfigHandler.getConfig().getChannel();
+							var message = Text.of(String.format("Current pingwheel channel: %s", formatChannel.apply(currentChannel)));
+							MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(message);
+							MinecraftClient.getInstance().getNarratorManager().narrate(message);
+
+							return 1;
+						})
+						.then(argument("channel_name", StringArgumentType.string()).executes((context) -> {
+							var newChannel = context.getArgument("channel_name", String.class);
+
+							ConfigHandler.getConfig().setChannel(newChannel);
+							ConfigHandler.save();
+
+							var message = Text.of(String.format("Set pingwheel channel to: %s", formatChannel.apply(newChannel)));
+
+							MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(message);
+							MinecraftClient.getInstance().getNarratorManager().narrate(message);
+							return 1;
+						})));
+		event.getDispatcher().register(cmdBase);
+	}
+
+	@Contract(value = "_ -> new", pure = true)
+	public static @NotNull LiteralArgumentBuilder<ServerCommandSource> literal(String name) {
+		return LiteralArgumentBuilder.literal(name);
+	}
+
+	@Contract(value = "_, _ -> new", pure = true)
+	public static <T> @NotNull RequiredArgumentBuilder<ServerCommandSource, T> argument(String name, ArgumentType<T> type) {
+		return RequiredArgumentBuilder.argument(name, type);
 	}
 }
