@@ -5,7 +5,7 @@ license = "MIT"
 [[mods]]
 modId = "pingwheel"
 version = "${version}"
-logoFile="assets/pingwheel/icon.png"
+logoFile= "icon.png"
 displayName = "PingWheel"
 credits="RXJpaw, Luken (original author)"
 authors="TeamPotato"
